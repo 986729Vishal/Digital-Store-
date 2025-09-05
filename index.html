@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Shop — Neon Glass</title>
+<style>
+  :root{
+    --bg:#0a0f19;
+    --glass:rgba(255,255,255,.08);
+    --stroke:rgba(255,255,255,.16);
+    --text:#e8f3ff;
+    --muted:#9db0c9;
+    --cyan:#00e5ff; --purple:#9b5cff; --lime:#4dff88;
+    --danger:#ff5470;
+    --shadow: 0 10px 30px rgba(0,0,0,.45);
+    --radius:18px; --blur: blur(14px); --speed:.35s;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+    color:var(--text);
+    background:
+      radial-gradient(1100px 700px at 0% 0%, rgba(0,229,255,.12), transparent 60%),
+      radial-gradient(900px 600px at 100% 20%, rgba(155,92,255,.12), transparent 60%),
+      radial-gradient(800px 600px at 50% 100%, rgba(77,255,136,.10), transparent 60%),
+      #070b13;
+    overflow-x:hidden;
+  }
+  header{
+    position:sticky; top:0; z-index:60;
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    background: linear-gradient(135deg, rgba(0,229,255,.08), rgba(155,92,255,.08));
+    border-bottom:1px solid var(--stroke);
+    box-shadow: var(--shadow);
+  }
+  .topbar{
+    display:grid; grid-template-columns: 40px 1fr 40px; align-items:center; gap:8px; padding:10px 12px;
+  }
+  .menu-btn,.acct-btn{
+    width:40px; height:40px; display:grid; place-items:center; border-radius:12px;
+    border:1px solid var(--stroke); background:rgba(255,255,255,.06); color:var(--text);
+    cursor:pointer; transition: transform var(--speed) ease, box-shadow var(--speed) ease, border-color var(--speed) ease;
+  }
+  .menu-btn:hover,.acct-btn:hover{ transform: translateY(-2px) scale(1.03); box-shadow: 0 10px 24px rgba(0,229,255,.22); border-color: rgba(0,229,255,.45)}
+  .brand{
+    display:flex; justify-content:center; align-items:center; gap:10px;
+  }
+  .brand img{ width:34px; height:34px; border-radius:12px; object-fit:cover; box-shadow:0 0 22px rgba(0,229,255,.35) }
+  .brand h1{ font-size:16px; margin:0 }
+  .wrap{ padding:14px; max-width:1100px; margin:0 auto}
+  .search{
+    display:flex; align-items:center; gap:10px; margin:10px 0 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
+    border:1px solid var(--stroke); border-radius:16px; padding:10px 12px;
+  }
+  .search input{
+    flex:1; background:transparent; border:0; outline:none; color:var(--text); font-size:14px;
+    transition: transform var(--speed) ease, box-shadow var(--speed) ease;
+  }
+  .search:focus-within{
+    box-shadow:0 0 0 3px rgba(0,229,255,.18), 0 10px 30px rgba(0,229,255,.12);
+    transform: translateY(-1px);
+  }
+  .glow-btn{
+    position:relative; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:10px 14px; border-radius:14px; border:1px solid var(--stroke);
+    background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    color:var(--text); cursor:pointer; transition: transform var(--speed) ease, box-shadow var(--speed) ease, border-color var(--speed) ease;
+    box-shadow: inset 0 0 0 0 rgba(0,229,255,.0), 0 10px 24px rgba(0,0,0,.35);
+    overflow:hidden;
+  }
+  .glow-btn:hover{ transform: translateY(-2px) scale(1.02); box-shadow:0 10px 30px rgba(155,92,255,.25)}
+  .glow-btn:active{ transform: translateY(0) scale(.98)}
+  .glow-btn .ripple{
+    position:absolute; border-radius:50%; transform:scale(0); animation: ripple .6s linear; background:rgba(0,229,255,.35);
+    pointer-events:none;
+  }
+  @keyframes ripple{ to{ transform:scale(4); opacity:0 } }
+
+  /* Grid */
+  .grid{ display:grid; gap:14px }
+  .products{ grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); }
+  .card{
+    border-radius:16px; border:1px solid var(--stroke);
+    background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+    box-shadow: var(--shadow);
+    overflow:hidden; transition: transform var(--speed) ease, border-color var(--speed) ease, box-shadow var(--speed) ease;
+  }
+  .card:hover{ transform:translateY(-4px) scale(1.01); border-color: rgba(0,229,255,.45); box-shadow: 0 0 40px rgba(0,229,255,.22), 0 10px 30px rgba(0,0,0,.35)}
+  .card img{ width:100%; height:140px; object-fit:cover }
+  .card-body{ padding:12px; display:grid; gap:8px }
+  .price{ display:flex; gap:8px; align-items:center }
+  .strike{ text-decoration:line-through; color:#9fb0c9 }
+
+  /* Drawer menu */
+  .drawer{
+    position:fixed; inset:0 40% 0 0; max-width:320px; transform:translateX(-110%);
+    background: linear-gradient(180deg, rgba(0,229,255,.08), rgba(155,92,255,.08));
+    border-right:1px solid var(--stroke);
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    transition: transform .45s ease;
+    z-index:70; padding:14px;
+    box-shadow: var(--shadow);
+  }
+  .drawer.open{ transform:translateX(0) }
+  .scrim{
+    position:fixed; inset:0; background:rgba(2,6,12,.45); opacity:0; pointer-events:none; transition: opacity .35s ease; z-index:65;
+  }
+  .scrim.show{ opacity:1; pointer-events:auto }
+
+  .menu-list{ display:grid; gap:10px; margin-top:12px }
+  .menu-item{ padding:12px 14px; border-radius:14px; border:1px solid var(--stroke); background:rgba(255,255,255,.06); cursor:pointer; transition: transform var(--speed) ease, box-shadow var(--speed) ease, border-color var(--speed) ease; }
+  .menu-item:hover{ transform: translateX(4px); border-color: rgba(0,229,255,.45); box-shadow: 0 10px 30px rgba(0,229,255,.18) }
+
+  /* Sections */
+  .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 12px }
+  .tab{ padding:8px 12px; border-radius:999px; border:1px solid var(--stroke); background:rgba(255,255,255,.06); cursor:pointer; font-size:12px }
+  .tab.active{ box-shadow:0 0 0 2px rgba(155,92,255,.35), 0 0 24px rgba(155,92,255,.25) inset }
+
+  /* Modal */
+  .modal{
+    position:fixed; inset:0; display:grid; place-items:center; z-index:80; visibility:hidden; opacity:0; transition: opacity .35s ease, visibility .35s ease;
+  }
+  .modal.show{ visibility:visible; opacity:1 }
+  .modal-card{
+    width:min(520px, 94vw);
+    border:1px solid var(--stroke); border-radius:20px; overflow:hidden;
+    background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    box-shadow: var(--shadow), 0 0 60px rgba(155,92,255,.25);
+    transform: translateY(10px); animation: slideIn .35s ease forwards;
+  }
+  @keyframes slideIn{ to{ transform: translateY(0) } }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid var(--stroke) }
+  .modal-body{ padding:12px 14px; display:grid; gap:10px }
+  .close-x{ cursor:pointer; padding:8px 10px; border-radius:10px; border:1px solid var(--stroke); background:rgba(255,255,255,.06) }
+  .input{ width:100%; padding:12px 14px; border-radius:14px; border:1px solid var(--stroke); background:rgba(255,255,255,.06); color:var(--text); outline:none; transition:border var(--speed) ease, box-shadow var(--speed) ease, transform var(--speed) ease; }
+  .input:focus{ border-color: rgba(0,229,255,.6); box-shadow:0 0 0 3px rgba(0,229,255,.18), 0 10px 30px rgba(0,229,255,.12); transform: translateY(-1px) }
+  .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+  .tiny{ font-size:12px; color:var(--muted) }
+
+  /* Contact + Policies */
+  .accordion{ border:1px solid var(--stroke); border-radius:16px; overflow:hidden }
+  .acc-item + .acc-item{ border-top:1px solid var(--stroke) }
+  .acc-head{ padding:12px 14px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; background:rgba(255,255,255,.06) }
+  .acc-body{ padding:12px 14px; display:none }
+  .acc-item.open .acc-body{ display:block; animation:fade .35s ease }
+  @keyframes fade{ from{opacity:.2; transform:translateY(-4px)} to{opacity:1; transform:none} }
+
+  .hidden{ display:none !important }
+  .center{ text-align:center }
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar">
+    <button class="menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+    <div class="brand">
+      <img id="brandLogo" alt="">
+      <h1 id="brandName">Brand</h1>
+    </div>
+    <button class="acct-btn" id="authBtn" title="Login">⎆</button>
+  </div>
+</header>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer">
+  <div class="row" style="justify-content:space-between">
+    <strong id="drawerUser">Guest</strong>
+    <button class="close-x" id="closeDrawer">✕</button>
+  </div>
+  <div class="menu-list" id="menuList"></div>
+</aside>
+
+<main class="wrap">
+  <div class="search">
+    <input id="search" placeholder="Search products..." />
+    <button class="glow-btn" id="clearSearch">Clear</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="products">Products</div>
+    <div class="tab" data-tab="bookmarks">Bookmarks</div>
+    <div class="tab" data-tab="history">Purchase History</div>
+    <div class="tab" data-tab="contact">Contact Us</div>
+  </div>
+
+  <section id="productsSec">
+    <div id="productsGrid" class="grid products"></div>
+  </section>
+
+  <section id="bookmarksSec" class="hidden">
+    <div id="bookmarksGrid" class="grid products"></div>
+    <p class="tiny" id="bmNote">Login to use bookmarks.</p>
+  </section>
+
+  <section id="historySec" class="hidden">
+    <div id="historyList" class="grid"></div>
+  </section>
+
+  <section id="contactSec" class="hidden">
+    <div class="card" style="padding:12px">
+      <h3 style="margin:6px 0 10px">Contact Information</h3>
+      <div id="contactInfo" class="grid"></div>
+    </div>
+
+    <h3 style="margin:14px 0 10px">Terms & Policies</h3>
+    <div class="accordion" id="policies">
+      <div class="acc-item">
+        <div class="acc-head"><strong>Refund Policy</strong><span>▾</span></div>
+        <div class="acc-body">
+          <p>Refunds are eligible within 7 days for unused/unaltered digital items. Provide order ID and purchase email for verification. Processing may take 5–7 business days.</p>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head"><strong>Terms & Conditions</strong><span>▾</span></div>
+        <div class="acc-body">
+          <p>By purchasing, you agree not to resell, redistribute, or misuse the product. All payments are processed via Razorpay links provided per product.</p>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head"><strong>Delivery Policy</strong><span>▾</span></div>
+        <div class="acc-body">
+          <p>Digital items are delivered via email or in-app links post-payment confirmation. If you don’t receive within 24 hours, contact support.</p>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head"><strong>Privacy Policy</strong><span>▾</span></div>
+        <div class="acc-body">
+          <p>We store minimal data (name, email, phone) for order records. Data is kept securely in Firebase and never sold to third parties.</p>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head"><strong>Contact Us</strong><span>▾</span></div>
+        <div class="acc-body">
+          <p>Use the contact details shown above or email us. We usually respond within 24–48 hours.</p>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head"><strong>Socials</strong><span>▾</span></div>
+        <div class="acc-body">
+          <p>Follow us on YouTube & Telegram for updates, offers, and support announcements.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div style="height:28px"></div>
+</main>
+
+<!-- Product Detail Modal -->
+<div class="modal" id="productModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <strong id="mTitle">Title</strong>
+      <button class="close-x" id="closeModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <img id="mImg" style="width:100%;border-radius:14px;border:1px solid var(--stroke);aspect-ratio:16/9;object-fit:cover" alt="">
+      <p id="mDesc" class="tiny"></p>
+      <div class="row price">
+        <span class="strike" id="mReal">₹0</span>
+        <strong style="color:var(--lime)" id="mDisc">₹0</strong>
+      </div>
+      <div class="row">
+        <button class="glow-btn" id="buyNowBtn">Buy Now</button>
+        <button class="glow-btn" id="bookmarkBtn">Bookmark</button>
+      </div>
+      <div id="buyForm" class="hidden" style="margin-top:8px">
+        <div class="row">
+          <input id="bf_name" class="input" placeholder="Your Name" />
+          <input id="bf_email" class="input" placeholder="Email" />
+          <input id="bf_phone" class="input" placeholder="Phone" />
+        </div>
+        <button class="glow-btn" id="confirmBuy">Confirm & Go to Payment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Button ripple effect
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.glow-btn');
+    if(!btn) return;
+    const r = document.createElement('span');
+    const rect = btn.getBoundingClientRect();
+    r.className='ripple';
+    r.style.left=(e.clientX-rect.left)+'px';
+    r.style.top=(e.clientY-rect.top)+'px';
+    r.style.width=r.style.height=Math.max(rect.width,rect.height)+'px';
+    btn.appendChild(r); setTimeout(()=>r.remove(),600);
+  });
+
+  // Tabs
+  const sections = {
+    products: document.getElementById('productsSec'),
+    bookmarks: document.getElementById('bookmarksSec'),
+    history: document.getElementById('historySec'),
+    contact: document.getElementById('contactSec')
+  };
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      const id = t.getAttribute('data-tab');
+      for(const k in sections){ sections[k].classList.toggle('hidden', k!==id); }
+      if(id==='bookmarks') loadBookmarks();
+      if(id==='history') loadHistory();
+      if(id==='contact')  renderContact();
+      closeDrawer();
+    });
+  });
+
+  // Drawer
+  const drawer = document.getElementById('drawer');
+  const scrim  = document.getElementById('scrim');
+  document.getElementById('menuBtn').addEventListener('click', ()=>{ drawer.classList.add('open'); scrim.classList.add('show'); });
+  document.getElementById('closeDrawer').addEventListener('click', closeDrawer);
+  scrim.addEventListener('click', closeDrawer);
+  function closeDrawer(){ drawer.classList.remove('open'); scrim.classList.remove('show'); }
+
+  // Accordion
+  document.querySelectorAll('.acc-item').forEach(item=>{
+    item.querySelector('.acc-head').addEventListener('click', ()=> item.classList.toggle('open'));
+  });
+
+  // Search
+  const search = document.getElementById('search');
+  const clearSearch = document.getElementById('clearSearch');
+  clearSearch.addEventListener('click', ()=>{ search.value=''; renderProducts(); });
+  search.addEventListener('input', renderProducts);
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+  import {
+    getDatabase, ref, onValue, set, push, get, child, update
+  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+  /* =====================  FIREBASE INIT  ===================== */
+
+  // ========== PASTE YOUR FIREBASE CONFIG HERE ==========
+  ‎const firebaseConfig = {
+‎  apiKey: "AIzaSyDlRTf9N9ShNqFY_5axTmIP1C8USJRbwHA",
+‎  authDomain: "digital-store-bedf9.firebaseapp.com",
+‎  databaseURL: "https://digital-store-bedf9-default-rtdb.firebaseio.com",
+‎  projectId: "digital-store-bedf9",
+‎  storageBucket: "digital-store-bedf9.firebasestorage.app",
+‎  messagingSenderId: "518807380832",
+‎  appId: "1:518807380832:web:cd79113b8a3a587ddd7405"
+‎};
+  // ========== END FIREBASE CONFIG SECTION ==========
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getDatabase(app);
+
+  // Header brand
+  const brandRef = ref(db, '/meta/brand');
+  const brandNameEl = document.getElementById('brandName');
+  const brandLogoEl = document.getElementById('brandLogo');
+  onValue(brandRef, snap=>{
+    const v = snap.val()||{};
+    brandNameEl.textContent = v.name || 'Brand';
+    brandLogoEl.src = v.logoUrl || '';
+  });
+
+  // Contact cache
+  let contactCache = null;
+  onValue(ref(db, '/meta/contact'), snap=> contactCache = snap.val() || null );
+
+  // Auth UI
+  const drawerUser = document.getElementById('drawerUser');
+  const authBtn = document.getElementById('authBtn');
+  const menuList = document.getElementById('menuList');
+
+  function menuItem(text, click){
+    const d = document.createElement('div');
+    d.className='menu-item'; d.textContent=text; d.addEventListener('click', click);
+    return d;
+  }
+  function rebuildMenu(user){
+    menuList.innerHTML='';
+    if(!user){
+      menuList.append(
+        menuItem('Products', ()=> selectTab('products')),
+        menuItem('Bookmarks (login)', ()=> selectTab('bookmarks')),
+        menuItem('Contact Us', ()=> selectTab('contact')),
+        menuItem('Login/Signup', ()=> doAuthPrompt())
+      );
+    }else{
+      menuList.append(
+        menuItem('Profile: '+(user.email||user.uid.slice(0,6)), ()=>{}),
+        menuItem('Products', ()=> selectTab('products')),
+        menuItem('Purchase History', ()=> selectTab('history')),
+        menuItem('Bookmarks', ()=> selectTab('bookmarks')),
+        menuItem('Contact Us', ()=> selectTab('contact')),
+        menuItem('Logout', ()=> signOut(auth))
+      );
+    }
+  }
+  function selectTab(id){
+    document.querySelector(`.tab[data-tab="${id}"]`).click();
+  }
+
+  authBtn.addEventListener('click', ()=> doAuthPrompt());
+
+  async function doAuthPrompt(){
+    const mode = confirm('OK = Login,  Cancel = Create account') ? 'login' : 'signup';
+    const email = prompt('Email:');
+    if(!email) return;
+    const pass = prompt('Password:');
+    if(!pass) return;
+    try{
+      if(mode==='login') await signInWithEmailAndPassword(auth, email, pass);
+      else await createUserWithEmailAndPassword(auth, email, pass);
+      toast(mode==='login'?'Logged in':'Account created');
+    }catch(e){ alert(e.message); }
+  }
+
+  onAuthStateChanged(auth, (user)=>{
+    drawerUser.textContent = user ? (user.email||user.uid) : 'Guest';
+    rebuildMenu(user);
+    renderProducts();
+    loadBookmarks();
+    loadHistory();
+  });
+
+  // Products
+  const productsGrid = document.getElementById('productsGrid');
+  let allProducts = {};
+  onValue(ref(db, '/products'), snap=>{
+    allProducts = snap.val()||{};
+    renderProducts();
+  });
+
+  function renderProducts(){
+    const q = (document.getElementById('search').value||'').toLowerCase().trim();
+    productsGrid.innerHTML='';
+    const arr = Object.entries(allProducts).sort((a,b)=> (b[1].createdAt||0)-(a[1].createdAt||0));
+    for(const [id,p] of arr){
+      if(q && !String(p.title||'').toLowerCase().includes(q)) continue;
+      const card = document.createElement('div');
+      card.className='card';
+      card.innerHTML = `
+        <img src="${p.imageUrl||''}" alt="">
+        <div class="card-body">
+          <strong>${escapeHtml(p.title||'Untitled')}</strong>
+          <div class="row">
+            <span class="strike">₹${Number(p.realPrice||0).toLocaleString('en-IN')}</span>
+            <strong style="color:var(--lime)">₹${Number(p.discountedPrice||0).toLocaleString('en-IN')}</strong>
+          </div>
+          <button class="glow-btn" data-view="${id}">View</button>
+        </div>
+      `;
+      card.querySelector('[data-view]').addEventListener('click', ()=> openProduct(id, p));
+      productsGrid.appendChild(card);
+    }
+  }
+
+  // Modal & Buy
+  const modal = document.getElementById('productModal');
+  const closeModalBtn = document.getElementById('closeModal');
+  const buyNowBtn = document.getElementById('buyNowBtn');
+  const confirmBuy = document.getElementById('confirmBuy');
+  const buyForm = document.getElementById('buyForm');
+  const mTitle = document.getElementById('mTitle');
+  const mImg   = document.getElementById('mImg');
+  const mDesc  = document.getElementById('mDesc');
+  const mReal  = document.getElementById('mReal');
+  const mDisc  = document.getElementById('mDisc');
+  const bookmarkBtn = document.getElementById('bookmarkBtn');
+  let currentProduct = null;
+  let currentProductId = null;
+
+  function openProduct(id,p){
+    currentProductId = id; currentProduct = p;
+    mTitle.textContent = p.title||'Product';
+    mImg.src = p.imageUrl||'';
+    mDesc.textContent = p.description||'';
+    mReal.textContent = '₹'+Number(p.realPrice||0).toLocaleString('en-IN');
+    mDisc.textContent = '₹'+Number(p.discountedPrice||0).toLocaleString('en-IN');
+    modal.classList.add('show');
+    buyForm.classList.add('hidden');
+  }
+  function closeModal(){ modal.classList.remove('show'); }
+  closeModalBtn.addEventListener('click', closeModal);
+  document.getElementById('productModal').addEventListener('click', e=>{ if(e.target.id==='productModal') closeModal(); });
+
+  buyNowBtn.addEventListener('click', ()=> buyForm.classList.toggle('hidden'));
+
+  confirmBuy.addEventListener('click', async ()=>{
+    const user = auth.currentUser;
+    const name  = document.getElementById('bf_name').value.trim();
+    const email = document.getElementById('bf_email').value.trim();
+    const phone = document.getElementById('bf_phone').value.trim();
+    if(!name || !email || !phone){ alert('Please fill your details'); return; }
+    const order = {
+      productId: currentProductId,
+      productSnapshot: currentProduct,
+      userInput: { name, email, phone, uid: user?user.uid:null },
+      createdAt: Date.now()
+    };
+    try{
+      const newRef = push(ref(db, '/orders'));
+      await set(newRef, order);
+      const oid = newRef.key;
+      if(user){
+        await update(ref(db, `/users/${user.uid}/purchases`), {[oid]: true});
+      }
+      toast('Order created. Redirecting to payment...');
+      setTimeout(()=>{ window.location.href = currentProduct.razorpayLink || '#'; }, 650);
+    }catch(e){ alert(e.message); }
+  });
+
+  // Bookmarks
+  const bookmarksGrid = document.getElementById('bookmarksGrid');
+  const bmNote = document.getElementById('bmNote');
+  document.getElementById('bookmarkBtn').addEventListener('click', async ()=>{
+    const user = auth.currentUser;
+    if(!user){ alert('Please login to bookmark'); return; }
+    const path = ref(db, `/users/${user.uid}/bookmarks/${currentProductId}`);
+    const snap = await get(path);
+    if(snap.exists()){
+      await set(path, null);
+      toast('Removed from bookmarks');
+    }else{
+      await set(path, true);
+      toast('Bookmarked');
+    }
+  });
+
+  async function loadBookmarks(){
+    const user = auth.currentUser;
+    bookmarksGrid.innerHTML='';
+    bmNote.classList.toggle('hidden', !!user);
+    if(!user){ return; }
+    const snap = await get(ref(db, `/users/${user.uid}/bookmarks`));
+    const map = snap.val()||{};
+    const ids = Object.keys(map);
+    if(ids.length===0){ bookmarksGrid.innerHTML='<p class="tiny">No bookmarks yet.</p>'; return; }
+    for(const id of ids){
+      const p = allProducts[id];
+      if(!p) continue;
+      const card = document.createElement('div');
+      card.className='card';
+      card.innerHTML = `
+        <img src="${p.imageUrl||''}" alt="">
+        <div class="card-body">
+          <strong>${escapeHtml(p.title||'Untitled')}</strong>
+          <div class="row">
+            <span class="strike">₹${Number(p.realPrice||0).toLocaleString('en-IN')}</span>
+            <strong style="color:var(--lime)">₹${Number(p.discountedPrice||0).toLocaleString('en-IN')}</strong>
+          </div>
+          <div class="row">
+            <button class="glow-btn" data-view="${id}">View</button>
+            <button class="glow-btn" data-rem="${id}">Remove</button>
+          </div>
+        </div>
+      `;
+      card.querySelector('[data-view]').addEventListener('click', ()=> openProduct(id, p));
+      card.querySelector('[data-rem]').addEventListener('click', async ()=>{
+        await set(ref(db, `/users/${user.uid}/bookmarks/${id}`), null);
+        loadBookmarks();
+      });
+      bookmarksGrid.appendChild(card);
+    }
+  }
+
+  // History
+  const historyList = document.getElementById('historySec').querySelector('#historyList');
+  async function loadHistory(){
+    const user = auth.currentUser;
+    historyList.innerHTML='';
+    if(!user){ historyList.innerHTML='<p class="tiny">Login to see your purchases.</p>'; return; }
+    const pSnap = await get(ref(db, `/users/${user.uid}/purchases`));
+    const ids = Object.keys(pSnap.val()||{});
+    if(ids.length===0){ historyList.innerHTML='<p class="tiny">No purchases yet.</p>'; return; }
+    const ordersSnap = await get(ref(db, '/orders'));
+    const orders = ordersSnap.val()||{};
+    const arr = ids.map(id=> ({id, ...orders[id]})).filter(Boolean).sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
+    for(const o of arr){
+      const d = document.createElement('div');
+      d.className='card';
+      const ps = o.productSnapshot||{};
+      d.innerHTML = `
+        <div class="card-body">
+          <div class="row" style="justify-content:space-between">
+            <strong>#${o.id.slice(-6).toUpperCase()} — ${escapeHtml(ps.title||'-')}</strong>
+            <span class="tiny">${new Date(o.createdAt||Date.now()).toLocaleString()}</span>
+          </div>
+          <div class="row">
+            <span class="strike">₹${Number(ps.realPrice||0).toLocaleString('en-IN')}</span>
+            <strong style="color:var(--lime)">₹${Number(ps.discountedPrice||0).toLocaleString('en-IN')}</strong>
+          </div>
+          <button class="glow-btn" data-view="${o.productId}">View Product</button>
+        </div>
+      `;
+      d.querySelector('[data-view]')?.addEventListener('click', ()=>{
+        const p = allProducts[o.productId]; if(p) openProduct(o.productId, p);
+      });
+      historyList.appendChild(d);
+    }
+  }
+
+  // Contact render
+  function renderContact(){
+    const box = document.getElementById('contactInfo');
+    const c = contactCache || {};
+    const rows = [
+      ['Brand Name', c.brandName || 'Brand Name: '],
+      ['Legal Operator', c.operator || 'Legal Operator: '],
+      ['City/State/PIN', c.cityStatePin || 'City/State/PIN: city_state_pincode'],
+      ['Email', c.email || 'Email: '],
+      ['Phone', c.phone || 'Phone: '],
+      ['Address', c.address || 'Address: '],
+      ['YouTube', c.socialYoutube || 'YouTube Link: '],
+      ['Telegram', c.socialTelegram || 'Telegram Link: ']
+    ];
+    box.innerHTML = '';
+    rows.forEach(([k,v])=>{
+      const row = document.createElement('div');
+      row.className='row';
+      row.innerHTML = `<strong style="min-width:140px">${k}</strong><span>${linkify(escapeHtml(v))}</span>`;
+      box.appendChild(row);
+    });
+  }
+
+  // Helpers
+  function toast(msg){
+    const t = document.createElement('div');
+    t.textContent=msg;
+    t.style.cssText = `
+      position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
+      background:linear-gradient(90deg, rgba(0,229,255,.25), rgba(155,92,255,.25));
+      border:1px solid var(--stroke); color:var(--text); padding:10px 14px; border-radius:12px;
+      backdrop-filter:${getComputedStyle(document.documentElement).getPropertyValue('--blur')}; box-shadow:var(--shadow); z-index:9999
+    `;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 1800);
+  }
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"'`=\/]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;' }[c])); }
+  function linkify(s){
+    try{
+      if(/^https?:\/\//i.test(s)) return `<a href="${s}" target="_blank" rel="noopener">${s}</a>`;
+      return s;
+    }catch{ return s; }
+  }
+
+  // Initial menu
+  rebuildMenu(null);
+
+</script>
+</body>
+</html>
