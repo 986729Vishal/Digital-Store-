@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>User Panel</title>
+  <style>
+    :root{--bg-color:#0f0c29;--primary-color:#24243e;--secondary-color:#302b63;--accent-cyan:#00e5ff;--accent-purple:#7f00ff;--accent-green:#00ff7f;--text-color:#e0e0e0;--card-radius:16px;--glow-shadow-cyan:0 0 5px var(--accent-cyan),0 0 10px var(--accent-cyan),0 0 15px var(--accent-cyan)}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Segoe UI,Roboto,sans-serif;background:linear-gradient(to right,var(--bg-color),var(--secondary-color),var(--bg-color));color:var(--text-color);line-height:1.6}
+    .header{display:flex;justify-content:center;align-items:center;padding:1rem 2rem;background:rgba(0,0,0,.25);backdrop-filter:blur(5px);position:sticky;top:0;z-index:1000}
+    .brand-logo{width:40px;height:40px;margin-right:1rem;border-radius:50%}
+    .hamburger{display:block;cursor:pointer;position:absolute;left:2rem;z-index:1100}
+    .hamburger .line{width:30px;height:3px;background:var(--text-color);margin:6px 0;transition:0.4s}
+    .slide-in-menu{height:100%;width:0;position:fixed;z-index:1050;top:0;left:0;background:rgba(15,12,41,.95);backdrop-filter:blur(10px);overflow-x:hidden;transition:.5s;padding-top:60px}
+    .slide-in-menu a{padding:1rem 2rem;text-decoration:none;font-size:1.2rem;color:var(--accent-cyan);display:block}
+    .container{max-width:1200px;margin:auto;padding:2rem 1rem}
+    .search-bar{text-align:center;margin-bottom:2rem}
+    .search-input{padding:.8rem 1.5rem;border-radius:25px;border:1px solid var(--accent-purple);background:rgba(0,0,0,.3);color:var(--text-color);width:50%;max-width:400px;transition:all .3s}
+    .product-card{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border-radius:var(--card-radius);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 32px rgba(0,0,0,.37);overflow:hidden;transition:transform .3s}
+    .product-card:hover{transform:translateY(-10px);box-shadow:0 0 20px rgba(0,229,255,.35)}
+    .product-card img{width:100%;height:200px;object-fit:cover}
+    .product-card-body{padding:1rem}
+    .btn{padding:.8rem 1.5rem;border:none;border-radius:8px;cursor:pointer;font-weight:700;position:relative;overflow:hidden}
+    .btn-glow{background:var(--accent-cyan);color:var(--bg-color);box-shadow:0 0 10px var(--accent-cyan)}
+    .bottom-bar{position:fixed;bottom:0;width:100%;background:rgba(0,0,0,.5);backdrop-filter:blur(5px);padding:.5rem;text-align:center;z-index:999}
+    .modal{display:none;position:fixed;z-index:2000;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,.7);animation:fadeIn .4s}
+    .modal-content{margin:8% auto;padding:1.5rem;width:90%;max-width:700px;background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border-radius:var(--card-radius);border:1px solid rgba(255,255,255,.12)}
+    .close-modal{color:#aaa;float:right;font-size:28px;font-weight:700;cursor:pointer}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="hamburger" onclick="toggleMenu()"><div class="line"></div><div class="line"></div><div class="line"></div></div>
+    <div style="display:flex;align-items:center;justify-content:center">
+      <img id="header-logo" src="https://via.placeholder.com/40" class="brand-logo" alt="logo" />
+      <h1 id="header-brand-name">Brand</h1>
+    </div>
+  </header>
+
+  <div id="slide-in-menu" class="slide-in-menu">
+    <a href="javascript:void(0)" class="close-btn" onclick="toggleMenu()">&times;</a>
+    <div id="menu-links"></div>
+  </div>
+
+  <div class="container" id="main-container">
+    <div class="search-bar">
+      <input id="search-input" class="search-input" placeholder="Search products..." />
+    </div>
+
+    <div id="product-grid"></div>
+  </div>
+
+  <div class="bottom-bar">
+    <button onclick="showPolicy('refund')">Refund Policy</button>
+    <button onclick="showPolicy('terms')">Terms & Conditions</button>
+    <button onclick="showPolicy('delivery')">Delivery Policy</button>
+    <button onclick="showPolicy('privacy')">Privacy Policy</button>
+    <button onclick="showContact()">Contact Us</button>
+    <a id="youtube-social-link" href="#" target="_blank">YouTube</a>
+    <a id="telegram-social-link" href="#" target="_blank">Telegram</a>
+  </div>
+
+  <div id="product-detail-modal" class="modal">
+    <div class="modal-content" id="product-detail-content"></div>
+  </div>
+
+  <div id="buy-now-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal('buy-now-modal')">&times;</span>
+      <h3>Enter Your Details</h3>
+      <form id="buy-now-form">
+        <input type="hidden" id="buy-product-id">
+        <div style="margin-bottom:.8rem"><input id="user-name" placeholder="Name" required style="width:100%;padding:.8rem;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:var(--text-color)"></div>
+        <div style="margin-bottom:.8rem"><input id="user-email" type="email" placeholder="Email" required style="width:100%;padding:.8rem;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:var(--text-color)"></div>
+        <div style="margin-bottom:1rem"><input id="user-phone" placeholder="Phone" required style="width:100%;padding:.8rem;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:var(--text-color)"></div>
+        <button class="btn btn-glow" style="width:100%">Proceed to Pay</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="policy-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal('policy-modal')">&times;</span>
+      <h3 id="policy-title"></h3>
+      <p id="policy-content"></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+    import { getDatabase, ref, onValue, push, set, get } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+    // ---------- Use the same cleaned config as admin.html ----------
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlRTf9N9ShNqFY_5axTmIP1C8USJRbwHA",
+      authDomain: "digital-store-bedf9.firebaseapp.com",
+      databaseURL: "https://digital-store-bedf9-default-rtdb.firebaseio.com",
+      projectId: "digital-store-bedf9",
+      storageBucket: "digital-store-bedf9.firebasestorage.app",
+      messagingSenderId: "518807380832",
+      appId: "1:518807380832:web:cd79113b8a3a587ddd7405"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let allProducts = [];
+    let currentUser = null;
+
+    onAuthStateChanged(auth, user=>{
+      currentUser = user;
+      updateMenu();
+    });
+
+    // Brand info
+    onValue(ref(db,'meta/brand'), snap=>{
+      const data = snap.val();
+      if (data) {
+        document.getElementById('header-brand-name').textContent = data.name || 'Brand';
+        document.getElementById('header-logo').src = data.logoUrl || 'https://via.placeholder.com/40';
+      }
+    });
+
+    // Products listener
+    onValue(ref(db,'products'), snap=>{
+      allProducts = [];
+      if (snap.exists()) {
+        snap.forEach(child => allProducts.push({ id: child.key, ...child.val() }));
+      }
+      renderProducts(allProducts);
+    });
+
+    function renderProducts(products){
+      const grid = document.getElementById('product-grid');
+      grid.innerHTML = '';
+      if (!products.length) { grid.innerHTML = '<p style="text-align:center">No products yet</p>'; return; }
+      products.forEach(p=>{
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+          <img src="${p.imageUrl}" alt="${p.title}">
+          <div class="product-card-body">
+            <h4>${p.title}</h4>
+            <button class="btn btn-glow view-btn" data-id="${p.id}">View</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      document.querySelectorAll('.view-btn').forEach(b=>b.addEventListener('click', e=>showProductDetail(e.currentTarget.dataset.id)));
+    }
+
+    window.showProductDetail = (productId) => {
+      const product = allProducts.find(x=>x.id===productId);
+      if (!product) return alert('Product not found');
+      const content = `
+        <span class="close-modal" onclick="closeModal('product-detail-modal')">&times;</span>
+        <img src="${product.imageUrl}" style="width:100%;max-height:300px;object-fit:cover;border-radius:8px;margin-bottom:.6rem">
+        <h2>${product.title}</h2>
+        <p>${product.description}</p>
+        <p><span style="text-decoration:line-through">₹${product.realPrice}</span> <strong style="color:var(--accent-green);font-size:1.2rem;margin-left:.6rem">₹${product.discountedPrice}</strong></p>
+        <div style="display:flex;gap:.6rem;margin-top:.8rem">
+          <button class="btn btn-glow" onclick="openBuyNowModal('${product.id}')">Buy Now</button>
+          <button class="btn btn-glow" onclick="toggleBookmark('${product.id}')">Bookmark</button>
+        </div>
+      `;
+      document.getElementById('product-detail-content').innerHTML = content;
+      document.getElementById('product-detail-modal').style.display = 'block';
+    }
+
+    // Menu
+    window.toggleMenu = () => {
+      const m = document.getElementById('slide-in-menu');
+      m.style.width = m.style.width === '250px' ? '0' : '250px';
+    };
+
+    function updateMenu() {
+      const links = document.getElementById('menu-links');
+      let html = '';
+      if (currentUser) {
+        html += `<a href="#">${currentUser.email}</a><a href="#" onclick="navigateTo('history')">Purchase History</a><a href="#" onclick="navigateTo('bookmarks')">Bookmarks</a>`;
+        html += `<a href="#" onclick="logout()">Logout</a>`;
+      } else {
+        html += `<a href="#" onclick="navigateTo('login')">Login/Signup</a>`;
+      }
+      html += `<a href="#" onclick="navigateTo('products')">Products</a><a href="#" onclick="showContact()">Contact Us</a>`;
+      links.innerHTML = html;
+    }
+
+    window.logout = () => {
+      signOut(auth).then(()=>navigateTo('products')).catch(err=>console.error(err));
+    };
+
+    window.navigateTo = (page) => {
+      const container = document.getElementById('main-container');
+      if (page === 'products') {
+        container.innerHTML = `<div class="search-bar"><input type="text" id="search-input" class="search-input" placeholder="Search products..."></div><div id="product-grid"></div>`;
+        renderProducts(allProducts);
+      } else if (page === 'history') {
+        if (!currentUser) return alert('Please login');
+        container.innerHTML = '<p>Purchase history not implemented yet</p>';
+      } else if (page === 'bookmarks') {
+        if (!currentUser) return alert('Please login');
+        container.innerHTML = '<p>Bookmarks not implemented yet</p>';
+      } else if (page === 'login') {
+        container.innerHTML = `<div style="max-width:420px;margin:2rem auto"><form id="quick-login"><div style="margin-bottom:.8rem"><input id="quick-email" placeholder="Email" style="width:100%;padding:.8rem;border-radius:8px"></div><div style="margin-bottom:.8rem"><input id="quick-pass" placeholder="Password" type="password" style="width:100%;padding:.8rem;border-radius:8px"></div><button class="btn btn-glow" style="width:100%">Login</button></form></div>`;
+        document.getElementById('quick-login').addEventListener('submit', async (e)=>{
+          e.preventDefault();
+          // Quick login uses the same Firebase auth but sign-in code left out for brevity
+          alert('Use Admin panel to create accounts or implement signup.');
+        });
+      }
+      toggleMenu();
+    };
+
+    // Buy now
+    window.openBuyNowModal = (productId) => {
+      document.getElementById('buy-product-id').value = productId;
+      document.getElementById('buy-now-modal').style.display = 'block';
+    };
+
+    document.getElementById('buy-now-form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const productId = document.getElementById('buy-product-id').value;
+      const product = allProducts.find(p=>p.id===productId);
+      if (!product) return alert('Product missing');
+
+      const orderData = {
+        productId,
+        productSnapshot: { title: product.title, price: product.discountedPrice },
+        userInput: {
+          name: document.getElementById('user-name').value.trim(),
+          email: document.getElementById('user-email').value.trim(),
+          phone: document.getElementById('user-phone').value.trim()
+        },
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        const newOrderRef = push(ref(db,'orders'));
+        await set(newOrderRef, orderData);
+
+        if (currentUser) {
+          await set(ref(db, `users/${currentUser.uid}/purchases/${newOrderRef.key}`), true);
+        }
+
+        // redirect to razorpay payment link stored in product
+        if (product.razorpayLink) {
+          window.location.href = product.razorpayLink;
+        } else {
+          alert('Payment link not found for this product');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Order failed: ' + (err.message || err));
+      }
+    });
+
+    // Bookmarks
+    window.toggleBookmark = async (productId) => {
+      if (!currentUser) return alert('Please login to bookmark');
+      try {
+        const bookmarkRef = ref(db, `users/${currentUser.uid}/bookmarks/${productId}`);
+        const snap = await get(bookmarkRef);
+        if (snap.exists()) {
+          await set(bookmarkRef, null);
+          alert('Bookmark removed');
+        } else {
+          await set(bookmarkRef, true);
+          alert('Bookmarked!');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Bookmark error: ' + err.message);
+      }
+    };
+
+    // Policies
+    window.showPolicy = (type) => {
+      const policies = {
+        refund:{title:'Refund Policy',content:'Refund policy text...'},
+        terms:{title:'Terms & Conditions',content:'Terms and conditions text...'},
+        delivery:{title:'Delivery Policy',content:'Delivery policy text...'},
+        privacy:{title:'Privacy Policy',content:'Privacy policy text...'}
+      };
+      document.getElementById('policy-title').innerText = policies[type].title;
+      document.getElementById('policy-content').innerText = policies[type].content;
+      document.getElementById('policy-modal').style.display = 'block';
+    };
+
+    // Contact
+    window.showContact = () => {
+      onValue(ref(db,'meta/contact'), snap=>{
+        const d = snap.val() || {};
+        alert(`Brand: ${d.brandName||'-'}\nOperator: ${d.operator||'-'}\nEmail: ${d.email||'-'}\nPhone: ${d.phone||'-'}`);
+      }, {onlyOnce:true});
+    };
+
+    // modals & global close
+    window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+    window.onclick = (e) => {
+      if (e.target.classList && e.target.classList.contains('modal')) e.target.style.display = 'none';
+    };
+
+  </script>
+</body>
+</html>
